@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LITE - Localizador de Tesis Estratégicas</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        navy: {
+                            800: '#0B192C',
+                            900: '#08111E',
+                            950: '#040911',
+                        },
+                        accent: {
+                            DEFAULT: '#10B981',
+                            hover: '#059669',
+                            light: '#D1FAE5',
+                        },
+                        slateCustom: {
+                            100: '#F1F5F9',
+                            800: '#1E293B',
+                            900: '#0F172A',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0F172A;
+            color: #F8FAFC;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #1E293B;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #10B981;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slateCustom-900 text-slate-100">
+
+    <!-- Header -->
+    <header class="bg-navy-900 border-b border-slate-800 sticky top-0 z-50 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2.5 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400">
+                        <i class="fa-solid fa-shield-halved text-2xl"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-3">
+                            <h1 class="text-2xl font-bold tracking-tight text-white">LITE</h1>
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                Acceso Abierto
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-400">Localizador de Tesis Estratégicas • Seguridad, Defensa, IA & Geopolítica</p>
+                    </div>
+                </div>
+
+                <!-- Stats summary -->
+                <div class="flex items-center space-x-6 text-xs text-slate-400 border-t md:border-t-0 pt-2 md:pt-0 border-slate-800">
+                    <div>
+                        <span class="block font-bold text-slate-200 text-sm" id="stat-total">8</span>
+                        <span>Tesis Indexadas</span>
+                    </div>
+                    <div class="h-8 w-px bg-slate-800"></div>
+                    <div>
+                        <span class="block font-bold text-emerald-400 text-sm">7</span>
+                        <span>Ejes Temáticos</span>
+                    </div>
+                    <div class="h-8 w-px bg-slate-800"></div>
+                    <div>
+                        <span class="block font-bold text-slate-200 text-sm">12+</span>
+                        <span>Repositorios</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Search Bar Section -->
+        <section class="mb-8">
+            <div class="bg-slateCustom-800 p-4 rounded-2xl border border-slate-700/60 shadow-xl">
+                <form id="search-form" onsubmit="event.preventDefault(); applyFilters();" class="flex flex-col md:flex-row gap-3">
+                    <div class="relative flex-grow">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </div>
+                        <input type="text" id="search-input" 
+                            placeholder="Buscar por título, autor, concepto (ej. Ciberdefensa, IA, Prospectiva, China)..." 
+                            class="w-full pl-11 pr-10 py-3 bg-navy-900 border border-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-slate-100 placeholder-slate-400 text-sm transition">
+                        <button type="button" id="clear-search" onclick="clearSearchInput()" class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="submit" class="flex-1 md:flex-initial px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-sm rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/30">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            Buscar
+                        </button>
+                        <button type="button" onclick="resetAllFilters()" class="px-4 py-3 bg-slate-700 hover:bg-slate-600 text-slate-300 font-medium text-sm rounded-xl transition flex items-center justify-center gap-2" title="Restablecer Filtros">
+                            <i class="fa-solid fa-rotate-left"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+
+            <!-- Sidebar / Advanced Filters -->
+            <aside class="lg:col-span-1 space-y-6">
+                <div class="bg-slateCustom-800 p-5 rounded-2xl border border-slate-700/60 shadow-lg sticky top-24">
+                    <div class="flex items-center justify-between pb-4 border-b border-slate-700 mb-5">
+                        <h2 class="font-semibold text-slate-200 flex items-center gap-2">
+                            <i class="fa-solid fa-filter text-emerald-400"></i>
+                            Filtros Avanzados
+                        </h2>
+                        <span id="active-filter-count" class="text-xs bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-medium hidden">0 activos</span>
+                    </div>
+
+                    <div class="space-y-6 text-sm">
+                        
+                        <!-- Filter: Academic Level -->
+                        <div>
+                            <label class="block font-medium text-slate-300 mb-2">Nivel Académico</label>
+                            <div class="space-y-2">
+                                <label class="flex items-center gap-2.5 cursor-pointer text-slate-400 hover:text-slate-200">
+                                    <input type="radio" name="level" value="ALL" checked onchange="applyFilters()" class="accent-emerald-500 bg-navy-900 border-slate-700 focus:ring-emerald-500">
+                                    Todos los niveles
+                                </label>
+                                <label class="flex items-center gap-2.5 cursor-pointer text-slate-400 hover:text-slate-200">
+                                    <input type="radio" name="level" value="Maestría" onchange="applyFilters()" class="accent-emerald-500 bg-navy-900 border-slate-700 focus:ring-emerald-500">
+                                    Maestría
+                                </label>
+                                <label class="flex items-center gap-2.5 cursor-pointer text-slate-400 hover:text-slate-200">
+                                    <input type="radio" name="level" value="Doctorado" onchange="applyFilters()" class="accent-emerald-500 bg-navy-900 border-slate-700 focus:ring-emerald-500">
+                                    Doctorado
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Filter: Thematic Axis -->
+                        <div>
+                            <label class="block font-medium text-slate-300 mb-2">Eje Temático</label>
+                            <div class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-1" id="themes-container">
+                                <!-- Dynamic checkboxes injected by JS -->
+                            </div>
+                        </div>
+
+                        <!-- Filter: Geographic Coverage / Repository -->
+                        <div>
+                            <label class="block font-medium text-slate-300 mb-2">Cobertura / Repositorio</label>
+                            <select id="repo-filter" onchange="applyFilters()" class="w-full bg-navy-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 text-xs focus:ring-emerald-500 focus:border-emerald-500">
+                                <option value="ALL">Todas las regiones / repositorios</option>
+                                <option value="NACIONAL">Nacional (México / LATAM - LA Referencia)</option>
+                                <option value="INTERNACIONAL">Internacional (NDLTD / OATD / Dialnet)</option>
+                            </select>
+                        </div>
+
+                        <!-- Filter: Year Range -->
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="font-medium text-slate-300">Rango de Años</label>
+                                <span class="text-xs text-emerald-400 font-mono" id="year-range-label">2018 - 2026</span>
+                            </div>
+                            <div class="space-y-3">
+                                <div>
+                                    <span class="text-xs text-slate-400 block mb-1">Año Inicio: <span id="year-min-val" class="text-slate-200 font-semibold">2018</span></span>
+                                    <input type="range" id="year-min" min="2018" max="2026" value="2018" step="1" oninput="updateYearRange()" onchange="applyFilters()" class="w-full accent-emerald-500 bg-navy-900">
+                                </div>
+                                <div>
+                                    <span class="text-xs text-slate-400 block mb-1">Año Fin: <span id="year-max-val" class="text-slate-200 font-semibold">2026</span></span>
+                                    <input type="range" id="year-max" min="2018" max="2026" value="2026" step="1" oninput="updateYearRange()" onchange="applyFilters()" class="w-full accent-emerald-500 bg-navy-900">
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content Area -->
+            <section class="lg:col-span-3 space-y-6">
+
+                <!-- Real-time Boolean Query Generator -->
+                <div class="bg-slateCustom-800 p-5 rounded-2xl border border-slate-700/60 shadow-lg">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-code text-emerald-400"></i>
+                            <h3 class="font-semibold text-slate-200 text-sm">Ecuación de Búsqueda Booleana Génesis</h3>
+                        </div>
+                        <button onclick="copyBooleanQuery()" class="text-xs bg-slate-700 hover:bg-emerald-600 text-slate-200 hover:text-white px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 font-medium">
+                            <i class="fa-regular fa-copy"></i>
+                            <span id="copy-btn-text">Copiar Cadena</span>
+                        </button>
+                    </div>
+                    <div class="bg-navy-950 p-3.5 rounded-xl border border-slate-800 font-mono text-xs text-emerald-300 break-all leading-relaxed relative group">
+                        <span id="boolean-query-output">Cargando ecuación...</span>
+                    </div>
+                    <p class="text-[11px] text-slate-400 mt-2 flex items-center gap-1">
+                        <i class="fa-solid fa-circle-info text-slate-500"></i>
+                        Pega esta cadena en motores académicos como Dialnet, OATD, NDLTD, LA Referencia o Google Scholar.
+                    </p>
+                </div>
+
+                <!-- Results Header / Controls -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slateCustom-800/50 p-4 rounded-xl border border-slate-800">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+                            Resultados Localizados
+                            <span id="results-count-badge" class="text-xs bg-emerald-500/20 text-emerald-300 px-2.5 py-0.5 rounded-full font-semibold">0</span>
+                        </h2>
+                        <p class="text-xs text-slate-400">Tesis verificadas en repositorios de acceso abierto</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label for="sort-select" class="text-xs text-slate-400 whitespace-nowrap">Ordenar por:</label>
+                        <select id="sort-select" onchange="applyFilters()" class="bg-navy-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:ring-emerald-500">
+                            <option value="year-desc">Año (Más reciente)</option>
+                            <option value="year-asc">Año (Más antiguo)</option>
+                            <option value="title">Título (A-Z)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Thesis Cards Results Container -->
+                <div id="results-container" class="space-y-4">
+                    <!-- Cards injected by JS -->
+                </div>
+
+                <!-- Empty state hidden by default -->
+                <div id="no-results" class="hidden text-center py-12 bg-slateCustom-800/30 rounded-2xl border border-dashed border-slate-800">
+                    <i class="fa-solid fa-folder-open text-4xl text-slate-600 mb-3"></i>
+                    <h3 class="text-base font-semibold text-slate-300">No se encontraron tesis</h3>
+                    <p class="text-xs text-slate-500 max-w-md mx-auto mt-1">Prueba ajustando los filtros de búsqueda, ampliando el rango de años o limpiando los términos ingresados.</p>
+                    <button onclick="resetAllFilters()" class="mt-4 px-4 py-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 text-xs rounded-lg transition font-medium border border-emerald-500/30">
+                        Restablecer Filtros
+                    </button>
+                </div>
+
+            </section>
+        </div>
+
+        <!-- Strategy & Documentation Section -->
+        <section class="mt-12 pt-8 border-t border-slate-800">
+            <div class="bg-slateCustom-800 p-6 rounded-2xl border border-slate-700/60 shadow-lg">
+                <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-book-bookmark text-emerald-400"></i>
+                    Estrategia Bibliográfica & Integración API
+                </h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                    
+                    <!-- Search Strategies -->
+                    <div class="space-y-3 bg-navy-900/60 p-4 rounded-xl border border-slate-800">
+                        <h3 class="font-semibold text-emerald-400 text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-diagram-project"></i>
+                            Cadenas de Búsqueda Recomendadas
+                        </h3>
+                        <div class="space-y-2 text-xs">
+                            <div>
+                                <span class="font-medium text-slate-300 block mb-0.5">1. Español (Enfoque Latinoamericano / LA Referencia):</span>
+                                <code class="block bg-navy-950 p-2 rounded text-emerald-300 font-mono break-all">("Seguridad Nacional" OR "Defensa Multidimensional") AND ("Inteligencia Artificial" OR "Ciberseguridad" OR "Prospectiva")</code>
+                            </div>
+                            <div>
+                                <span class="font-medium text-slate-300 block mb-0.5">2. Inglés (Enfoque Global / NDLTD & OATD):</span>
+                                <code class="block bg-navy-950 p-2 rounded text-emerald-300 font-mono break-all">("National Security" OR "Geopolitics") AND ("Artificial Intelligence" OR "Cybersecurity" OR "Predictive Analytics") AND ("doctoral dissertation" OR "master thesis")</code>
+                            </div>
+                            <div>
+                                <span class="font-medium text-slate-300 block mb-0.5">3. Híbrida (Prospectiva & Geoeconomía):</span>
+                                <code class="block bg-navy-950 p-2 rounded text-emerald-300 font-mono break-all">("Prospectiva" OR "Escenarios Futuros") AND ("Economía de la Defensa" OR "Recursos Estratégicos") AND NOT "Comercio Minorista"</code>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- API Integration Guide -->
+                    <div class="space-y-3 bg-navy-900/60 p-4 rounded-xl border border-slate-800">
+                        <h3 class="font-semibold text-emerald-400 text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-plug text-emerald-400"></i>
+                            Instrucciones para Conexión API / Backend
+                        </h3>
+                        <p class="text-xs text-slate-300 leading-relaxed">
+                            Para conectar esta interfaz web con un backend en vivo, consume servicios REST como <strong>OpenAlex API</strong> o <strong>Crossref API</strong> aplicando filtros por tipo de trabajo (<code class="bg-navy-950 px-1 py-0.5 rounded text-emerald-300">type:dissertation</code>).
+                        </p>
+                        <div class="bg-navy-950 p-3 rounded-lg text-xs font-mono text-slate-300 overflow-x-auto">
+                            <span class="text-slate-500">// Ejemplo Fetch REST API OpenAlex</span><br>
+                            <span class="text-purple-400">const</span> url = <span class="text-emerald-300">'https://api.openalex.org/works?filter=type:dissertation,title.search:cybersecurity'</span>;<br>
+                            <span class="text-purple-400">const</span> response = <span class="text-purple-400">await</span> fetch(url);<br>
+                            <span class="text-purple-400">const</span> data = <span class="text-purple-400">await</span> response.json();
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-navy-950 border-t border-slate-800 py-6 text-center text-xs text-slate-500 mt-12">
+        <div class="max-w-7xl mx-auto px-4">
+            <p>LITE — Localizador de Tesis Estratégicas © 2026. Herramienta de Acceso Abierto para Estudios de Seguridad, Defensa y Tecnología.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Database of mock thesis entries representing real research fields
+        const thesisDatabase = [
+            {
+                id: 1,
+                title: "Inteligencia Artificial Generativa y Algoritmos Predictivos en el Ciclo de Inteligencia Estratégica para la Seguridad Nacional",
+                author: "Dra. Sofía Mendoza Alarcón",
+                degree: "Doctorado",
+                institution: "Universidad Nacional Autónoma de México (UNAM) / BIDI UNAM",
+                year: 2024,
+                coverage: "NACIONAL",
+                themes: ["Inteligencia y Contrainteligencia", "Inteligencia Artificial", "Seguridad Nacional"],
+                keywords: ["IA Generativa", "Inteligencia Estratégica", "Modelos Predictivos", "Seguridad Nacional"],
+                abstract: "Esta investigación doctoral analiza la incorporación de modelos de lenguaje extenso y redes neuronales en la fase de procesamiento y análisis del ciclo de inteligencia militar y civil, proponiendo un marco ético e institucional para minimizar el sesgo algorítmico en la toma de decisiones geopolíticas.",
+                url: "https://repositorio.unam.mx",
+                pdfUrl: "#"
+            },
+            {
+                id: 2,
+                title: "Estrategias de Ciberdefensa e Infraestructuras Críticas: Análisis Prospectivo de Amenazas Híbridas en el Dominio Espacial y Marítimo",
+                author: "Mtro. Alejandro Vance",
+                degree: "Maestría",
+                institution: "Instituto Politécnico Nacional (IPN) / Repositorio Institucional IPN",
+                year: 2023,
+                coverage: "NACIONAL",
+                themes: ["Ciberseguridad y Ciberguerra", "Prospectiva y Estudios del Futuro", "Seguridad Nacional"],
+                keywords: ["Ciberdefensa", "Infraestructura Crítica", "Guerra Híbrida", "Análisis de Escenarios"],
+                abstract: "Estudio cualitativo-cuantitativo que formula tres escenarios prospectivos al año 2035 respecto a la vulnerabilidad de puertos marítimos y redes satelitales frente a ataques de denegación de servicio distribuido (DDoS) patrocinados por actores estatales.",
+                url: "https://repositorio.ipn.mx",
+                pdfUrl: "#"
+            },
+            {
+                id: 3,
+                title: "Geopolítica del Litio y Tierras Raras en América Latina: Transición Energética y Economía de la Defensa",
+                author: "Dr. Carlos Eduardo Restrepo",
+                degree: "Doctorado",
+                institution: "Universidad de Buenos Aires / LA Referencia",
+                year: 2025,
+                coverage: "NACIONAL",
+                themes: ["Geopolítica y Geoeconomía", "Economía de la Defensa"],
+                keywords: ["Recursos Estratégicos", "Tierras Raras", "Geoeconomía", "Soberanía Energética"],
+                abstract: "Analiza el impacto geopolítico del control sobre las cadenas de suministro de recursos críticos en el Cono Sur y su relación con los presupuestos de defensa y tratados de cooperación técnica militar multilateral.",
+                url: "https://www.lareferencia.info",
+                pdfUrl: "#"
+            },
+            {
+                id: 4,
+                title: "Cyber War Games and Autonomous Weapon Systems: Ethical and Strategic Implications under International Humanitarian Law",
+                author: "Dr. Jonathan K. Miller",
+                degree: "Doctorado",
+                institution: "Georgetown University / NDLTD",
+                year: 2022,
+                coverage: "INTERNACIONAL",
+                themes: ["Ciberseguridad y Ciberguerra", "Inteligencia Artificial", "Geopolítica y Geoeconomía"],
+                keywords: ["LAWS", "Autonomous Weapons", "Cyber War", "International Security"],
+                abstract: "Examines the strategic escalation risks associated with Autonomous Weapon Systems (AWS) in contested electromagnetic environments, utilizing algorithmic game theory to model conflict deterrence.",
+                url: "https://www.ndltd.org",
+                pdfUrl: "#"
+            },
+            {
+                id: 5,
+                title: "Metodologías de Prospectiva y Matriz IGO para la Prevención de Riesgos de Seguridad Híbrida en Fronteras",
+                author: "Mtra. Elena Rostova",
+                degree: "Maestría",
+                institution: "Universidad de Granada / Dialnet Tesis",
+                year: 2021,
+                coverage: "INTERNACIONAL",
+                themes: ["Prospectiva y Estudios del Futuro", "Seguridad Nacional"],
+                keywords: ["Matriz IGO", "Método Delphi", "Seguridad Fronteriza", "Prospectiva"],
+                abstract: "Propuesta metodológica basada en la matriz de Impacto y Grado de Ocurrencia (IGO) junto con paneles Delphi para mapear dinámicas delictivas transnacionales y diseñar políticas públicas de seguridad anticipatoria.",
+                url: "https://dialnet.unirioja.es",
+                pdfUrl: "#"
+            },
+            {
+                id: 6,
+                title: "OSINT y Minería de Datos Masivos en Fuentes Abiertas para la Contrainteligencia Antiterrorista",
+                author: "Mtro. David Benavides",
+                degree: "Maestría",
+                institution: "Universidad de las Fuerzas Armadas (ESPE) / LA Referencia",
+                year: 2023,
+                coverage: "NACIONAL",
+                themes: ["Inteligencia y Contrainteligencia", "Inteligencia Artificial", "Ciberseguridad y Ciberguerra"],
+                keywords: ["OSINT", "Big Data", "Contrainteligencia", "Ciberpatrullaje"],
+                abstract: "Sistematización de protocolos de recolección de inteligencia de fuentes abiertas (OSINT) con herramientas de procesado de lenguaje natural para detectar patrones de reclutamiento extremista en redes oscuras.",
+                url: "https://www.lareferencia.info",
+                pdfUrl: "#"
+            },
+            {
+                id: 7,
+                title: "Presupuesto de Seguridad y Eficiencia del Gasto Público Militar: Un Enfoque Econométrico en la Región Andina",
+                author: "Dra. Beatriz Paredes",
+                degree: "Doctorado",
+                institution: "Universidad Nacional Mayor de San Marcos / RDI CONCYTEC",
+                year: 2019,
+                coverage: "NACIONAL",
+                themes: ["Economía de la Defensa"],
+                keywords: ["Economía de la Defensa", "Gasto Militar", "Econometría", "Seguridad Multidimensional"],
+                abstract: "Evalúa la correlación entre el crecimiento del producto interno bruto y las partidas presupuestarias destinadas a equipamiento y mantenimiento de las fuerzas armadas en el periodo 2000-2018.",
+                url: "https://renati.sunedu.gob.pe",
+                pdfUrl: "#"
+            },
+            {
+                id: 8,
+                title: "Strategic Foresight in National Security: Machine Learning Models for Early Warning Systems",
+                author: "Dr. Marcus Thorne",
+                degree: "Doctorado",
+                institution: "King's College London / OATD",
+                year: 2024,
+                coverage: "INTERNACIONAL",
+                themes: ["Prospectiva y Estudios del Futuro", "Inteligencia Artificial", "Seguridad Nacional"],
+                keywords: ["Strategic Foresight", "Machine Learning", "Early Warning", "National Security"],
+                abstract: "Combines strategic foresight methodologies with supervised machine learning algorithms to develop real-time early warning systems for geopolitical instability and regional crises.",
+                url: "https://oatd.org",
+                pdfUrl: "#"
+            }
+        ];
+
+        // Unique Thematic Axes list
+        const thematicAxes = [
+            "Seguridad Nacional y Defensa",
+            "Geopolítica y Geoeconomía",
+            "Economía de la Defensa",
+            "Prospectiva y Estudios del Futuro",
+            "Inteligencia y Contrainteligencia",
+            "Inteligencia Artificial",
+            "Ciberseguridad y Ciberguerra"
+        ];
+
+        // Initialize UI on DOM load
+        document.addEventListener('DOMContentLoaded', () => {
+            renderThematicCheckboxes();
+            applyFilters();
+
+            // Toggle clear button on input change
+            const searchInput = document.getElementById('search-input');
+            searchInput.addEventListener('input', (e) => {
+                const clearBtn = document.getElementById('clear-search');
+                if (e.target.value.trim().length > 0) {
+                    clearBtn.classList.remove('hidden');
+                } else {
+                    clearBtn.classList.add('hidden');
+                }
+                applyFilters();
+            });
+        });
+
+        // Render checkboxes for thematic axes
+        function renderThematicCheckboxes() {
+            const container = document.getElementById('themes-container');
+            container.innerHTML = thematicAxes.map((theme, index) => `
+                <label class="flex items-center gap-2.5 cursor-pointer text-slate-400 hover:text-slate-200">
+                    <input type="checkbox" value="${theme}" onchange="applyFilters()" class="theme-checkbox accent-emerald-500 bg-navy-900 border-slate-700 rounded focus:ring-emerald-500">
+                    <span class="text-xs">${theme}</span>
+                </label>
+            `).join('');
+        }
+
+        // Main filtering engine
+        function applyFilters() {
+            const searchTerm = document.getElementById('search-input').value.trim().toLowerCase();
+            const selectedLevel = document.querySelector('input[name="level"]:checked').value;
+            const selectedRepo = document.getElementById('repo-filter').value;
+            const yearMin = parseInt(document.getElementById('year-min').value);
+            const yearMax = parseInt(document.getElementById('year-max').value);
+            const sortOption = document.getElementById('sort-select').value;
+
+            // Get selected themes
+            const checkedThemeBoxes = document.querySelectorAll('.theme-checkbox:checked');
+            const selectedThemes = Array.from(checkedThemeBoxes).map(cb => cb.value);
+
+            // Filter database
+            let filtered = thesisDatabase.filter(item => {
+                // Search term
+                const matchesSearch = !searchTerm || 
+                    item.title.toLowerCase().includes(searchTerm) ||
+                    item.author.toLowerCase().includes(searchTerm) ||
+                    item.abstract.toLowerCase().includes(searchTerm) ||
+                    item.keywords.some(k => k.toLowerCase().includes(searchTerm));
+
+                // Academic Level
+                const matchesLevel = (selectedLevel === 'ALL') || (item.degree === selectedLevel);
+
+                // Geographic Coverage / Repo
+                const matchesRepo = (selectedRepo === 'ALL') || (item.coverage === selectedRepo);
+
+                // Year Range
+                const matchesYear = (item.year >= yearMin) && (item.year <= yearMax);
+
+                // Themes
+                const matchesTheme = (selectedThemes.length === 0) || 
+                    selectedThemes.some(st => item.themes.some(it => it.toLowerCase().includes(st.toLowerCase())));
+
+                return matchesSearch && matchesLevel && matchesRepo && matchesYear && matchesTheme;
+            });
+
+            // Sorting
+            if (sortOption === 'year-desc') {
+                filtered.sort((a, b) => b.year - a.year);
+            } else if (sortOption === 'year-asc') {
+                filtered.sort((a, b) => a.year - b.year);
+            } else if (sortOption === 'title') {
+                filtered.sort((a, b) => a.title.localeCompare(b.title));
+            }
+
+            // Update UI
+            renderResults(filtered);
+            updateBooleanQuery(searchTerm, selectedLevel, selectedThemes, selectedRepo, yearMin, yearMax);
+            updateActiveFilterBadge(searchTerm, selectedLevel, selectedThemes, selectedRepo, yearMin, yearMax);
+        }
+
+        // Render thesis cards
+        function renderResults(results) {
+            const container = document.getElementById('results-container');
+            const noResults = document.getElementById('no-results');
+            const badgeCount = document.getElementById('results-count-badge');
+
+            badgeCount.textContent = results.length;
+
+            if (results.length === 0) {
+                container.innerHTML = '';
+                noResults.classList.remove('hidden');
+                return;
+            }
+
+            noResults.classList.add('hidden');
+
+            container.innerHTML = results.map(item => `
+                <article class="bg-slateCustom-800 p-5 rounded-2xl border border-slate-700/60 hover:border-slate-600 transition shadow-lg group">
+                    <div class="flex flex-wrap items-center gap-2 mb-3">
+                        <span class="px-2.5 py-0.5 rounded-md text-xs font-semibold ${item.degree === 'Doctorado' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'}">
+                            <i class="fa-solid fa-graduation-cap mr-1"></i>${item.degree}
+                        </span>
+                        <span class="px-2.5 py-0.5 rounded-md text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                            ${item.year}
+                        </span>
+                        <span class="px-2.5 py-0.5 rounded-md text-xs font-medium bg-slate-700 text-slate-300">
+                            <i class="fa-solid fa-globe mr-1 text-slate-400"></i>${item.coverage === 'NACIONAL' ? 'Nacional (LATAM)' : 'Internacional'}
+                        </span>
+                    </div>
+
+                    <h3 class="text-base font-bold text-white group-hover:text-emerald-400 transition mb-2 leading-snug">
+                        ${item.title}
+                    </h3>
+
+                    <div class="flex flex-wrap items-center gap-y-1 gap-x-4 text-xs text-slate-400 mb-3">
+                        <span class="text-slate-300 font-medium"><i class="fa-regular fa-user mr-1 text-emerald-400"></i>${item.author}</span>
+                        <span><i class="fa-solid fa-building-columns mr-1 text-slate-500"></i>${item.institution}</span>
+                    </div>
+
+                    <p class="text-xs text-slate-300 leading-relaxed mb-4 line-clamp-3 bg-navy-900/40 p-3 rounded-lg border border-slate-800">
+                        ${item.abstract}
+                    </p>
+
+                    <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-700/50">
+                        <div class="flex flex-wrap gap-1.5">
+                            ${item.keywords.map(kw => `
+                                <span class="text-[11px] bg-slate-700/50 text-slate-300 px-2 py-0.5 rounded border border-slate-600/40">#${kw}</span>
+                            `).join('')}
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-medium rounded-lg transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                                Repositorio
+                            </a>
+                            <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium rounded-lg transition flex items-center gap-1.5 shadow-md shadow-emerald-900/20">
+                                <i class="fa-solid fa-file-pdf"></i>
+                                Descargar PDF
+                            </a>
+                        </div>
+                    </div>
+                </article>
+            `).join('');
+        }
+
+        // Generate Boolean Search String
+        function updateBooleanQuery(searchTerm, level, themes, repo, minYear, maxYear) {
+            let termsArray = [];
+
+            if (searchTerm) {
+                termsArray.push(`("${searchTerm}")`);
+            }
+
+            if (themes.length > 0) {
+                const themeGroup = themes.map(t => `"${t}"`).join(' OR ');
+                termsArray.push(`(${themeGroup})`);
+            } else {
+                termsArray.push(`("Seguridad Nacional" OR "Ciberseguridad" OR "Geopolítica" OR "Prospectiva" OR "Inteligencia Artificial")`);
+            }
+
+            if (level !== 'ALL') {
+                termsArray.push(`("${level}" OR "${level === 'Doctorado' ? 'Dissertation' : 'Thesis'}")`);
+            } else {
+                termsArray.push(`("Maestría" OR "Doctorado" OR "Master thesis" OR "Doctoral dissertation")`);
+            }
+
+            let queryString = termsArray.join(' AND ');
+            queryString += ` AND YEAR:(${minYear} TO ${maxYear})`;
+
+            document.getElementById('boolean-query-output').textContent = queryString;
+        }
+
+        // Update year range display
+        function updateYearRange() {
+            let minEl = document.getElementById('year-min');
+            let maxEl = document.getElementById('year-max');
+
+            if (parseInt(minEl.value) > parseInt(maxEl.value)) {
+                minEl.value = maxEl.value;
+            }
+
+            document.getElementById('year-min-val').textContent = minEl.value;
+            document.getElementById('year-max-val').textContent = maxEl.value;
+            document.getElementById('year-range-label').textContent = `${minEl.value} - ${maxEl.value}`;
+        }
+
+        // Copy Boolean Query
+        function copyBooleanQuery() {
+            const queryText = document.getElementById('boolean-query-output').textContent;
+            
+            // Clipboard execution
+            const tempInput = document.createElement('textarea');
+            tempInput.value = queryText;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+
+            // UI feedback
+            const btnText = document.getElementById('copy-btn-text');
+            const originalText = btnText.textContent;
+            btnText.textContent = "¡Copiado!";
+            setTimeout(() => {
+                btnText.textContent = originalText;
+            }, 2000);
+        }
+
+        // Clear Search Input
+        function clearSearchInput() {
+            document.getElementById('search-input').value = '';
+            document.getElementById('clear-search').classList.add('hidden');
+            applyFilters();
+        }
+
+        // Reset all filters
+        function resetAllFilters() {
+            document.getElementById('search-input').value = '';
+            document.getElementById('clear-search').classList.add('hidden');
+            document.querySelector('input[name="level"][value="ALL"]').checked = true;
+            document.getElementById('repo-filter').value = 'ALL';
+            document.getElementById('year-min').value = 2018;
+            document.getElementById('year-max').value = 2026;
+            document.getElementById('sort-select').value = 'year-desc';
+
+            document.querySelectorAll('.theme-checkbox').forEach(cb => cb.checked = false);
+
+            updateYearRange();
+            applyFilters();
+        }
+
+        // Active filter counter badge
+        function updateActiveFilterBadge(searchTerm, level, themes, repo, minYear, maxYear) {
+            let count = 0;
+            if (searchTerm) count++;
+            if (level !== 'ALL') count++;
+            if (repo !== 'ALL') count++;
+            if (themes.length > 0) count += themes.length;
+            if (minYear > 2018 || maxYear < 2026) count++;
+
+            const badge = document.getElementById('active-filter-count');
+            if (count > 0) {
+                badge.textContent = `${count} activo${count > 1 ? 's' : ''}`;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>
